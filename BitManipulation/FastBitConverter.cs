@@ -30,7 +30,7 @@ namespace BitManipulation
 
         private static void WriteLittleEndian(byte[] buffer, int offset, ulong data)
         {
-#if BIGENDIAN
+            #if BIGENDIAN
             buffer[offset + 7] = (byte)(data);
             buffer[offset + 6] = (byte)(data >> 8);
             buffer[offset + 5] = (byte)(data >> 16);
@@ -39,7 +39,7 @@ namespace BitManipulation
             buffer[offset + 2] = (byte)(data >> 40);
             buffer[offset + 1] = (byte)(data >> 48);
             buffer[offset    ] = (byte)(data >> 56);
-#else
+            #else
             buffer[offset] = (byte)(data);
             buffer[offset + 1] = (byte)(data >> 8);
             buffer[offset + 2] = (byte)(data >> 16);
@@ -48,33 +48,33 @@ namespace BitManipulation
             buffer[offset + 5] = (byte)(data >> 40);
             buffer[offset + 6] = (byte)(data >> 48);
             buffer[offset + 7] = (byte)(data >> 56);
-#endif
+            #endif
         }
 
         private static void WriteLittleEndian(byte[] buffer, int offset, int data)
         {
-#if BIGENDIAN
+            #if BIGENDIAN
             buffer[offset + 3] = (byte)(data);
             buffer[offset + 2] = (byte)(data >> 8);
             buffer[offset + 1] = (byte)(data >> 16);
             buffer[offset    ] = (byte)(data >> 24);
-#else
+            #else
             buffer[offset] = (byte)(data);
             buffer[offset + 1] = (byte)(data >> 8);
             buffer[offset + 2] = (byte)(data >> 16);
             buffer[offset + 3] = (byte)(data >> 24);
-#endif
+            #endif
         }
 
         public static void WriteLittleEndian(byte[] buffer, int offset, short data)
         {
-#if BIGENDIAN
+            #if BIGENDIAN
             buffer[offset + 1] = (byte)(data);
             buffer[offset    ] = (byte)(data >> 8);
-#else
+            #else
             buffer[offset] = (byte)(data);
             buffer[offset + 1] = (byte)(data >> 8);
-#endif
+            #endif
         }
 
         public static void GetBytes(byte[] bytes, int startIndex, double value)

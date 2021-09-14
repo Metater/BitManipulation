@@ -32,48 +32,42 @@ namespace BitManipulation
         {
             CheckScratch();
             scratch = (scratch >> bits);
-            ulong data = ((ulong)value) << 64 - bits;
-            scratch |= data;
+            scratch |= ((ulong)value) << 64 - bits;
             scratchIndex += bits;
         }
         public void WriteSByte(sbyte value, int bits = 8)
         {
             CheckScratch();
             scratch = (scratch >> bits);
-            ulong data = ((ulong)value) << 64 - bits;
-            scratch |= data;
+            scratch |= ((ulong)value) << 64 - bits;
             scratchIndex += bits;
         }
         public void WriteUShort(ushort value, int bits = 16)
         {
             CheckScratch();
             scratch = (scratch >> bits);
-            ulong data = ((ulong)value) << 64 - bits;
-            scratch |= data;
+            scratch |= ((ulong)value) << 64 - bits;
             scratchIndex += bits;
         }
         public void WriteShort(short value, int bits = 16)
         {
             CheckScratch();
             scratch = (scratch >> bits);
-            ulong data = ((ulong)value) << 64 - bits;
-            scratch |= data;
+            scratch |= ((ulong)value) << 64 - bits;
             scratchIndex += bits;
         }
         public void WriteUInt(uint value, int bits = 32)
         {
             CheckScratch();
             scratch = (scratch >> bits);
-            ulong data = ((ulong)value) << 64 - bits;
-            scratch |= data;
+            scratch |= ((ulong)value) << 64 - bits;
             scratchIndex += bits;
         }
         public void WriteInt(int value, int bits = 32)
         {
             CheckScratch();
             scratch = (scratch >> bits);
-            ulong data = ((ulong)value) << 64 - bits;
-            scratch |= data;
+            scratch |= ((ulong)value) << 64 - bits;
             scratchIndex += bits;
         }
         public void WriteULong(ulong value, int bits = 64)
@@ -81,9 +75,7 @@ namespace BitManipulation
             int value0 = (int)value;
             int value1 = (int)(value >> 32);
             if (bits <= 32)
-            {
                 WriteInt(value0, bits);
-            }
             else
             {
                 WriteInt(value0);
@@ -95,9 +87,7 @@ namespace BitManipulation
             int value0 = (int)value;
             int value1 = (int)(value >> 32);
             if (bits <= 32)
-            {
                 WriteInt(value0, bits);
-            }
             else
             {
                 WriteInt(value0);
@@ -109,26 +99,25 @@ namespace BitManipulation
         {
             // Flipped wrong way, each byte is
             CheckScratch();
-            int extraBytesInScratch = scratchIndex;
-            if (extraBytesInScratch == 0) return TrimData();
-            byte[] extraData;
-            if (extraBytesInScratch <= 8)
+            int bitsInScratch = scratchIndex;
+            if (bitsInScratch == 0) return TrimData();
+            if (bitsInScratch <= 8)
             { // 1 byte
-                scratch = (scratch >> (8 - extraBytesInScratch));
+                scratch = (scratch >> (8 - bitsInScratch));
                 data[writePos] = (byte)(scratch >> 56);
                 writePos++;
             }
-            else if (extraBytesInScratch <= 16)
+            else if (bitsInScratch <= 16)
             { // 2 bytes
-                scratch = (scratch >> (8 - extraBytesInScratch));
+                scratch = (scratch >> (8 - bitsInScratch));
                 data[writePos] = (byte)(scratch >> 56);
                 writePos++;
                 data[writePos] = (byte)(scratch >> 48);
                 writePos++;
             }
-            else if (extraBytesInScratch <= 24)
+            else if (bitsInScratch <= 24)
             { // 3 bytes
-                scratch = (scratch >> (8 - extraBytesInScratch));
+                scratch = (scratch >> (8 - bitsInScratch));
                 data[writePos] = (byte)(scratch >> 56);
                 writePos++;
                 data[writePos] = (byte)(scratch >> 48);
@@ -138,7 +127,7 @@ namespace BitManipulation
             }
             else
             { // 4 bytes
-                scratch = (scratch >> (8 - extraBytesInScratch));
+                scratch = (scratch >> (8 - bitsInScratch));
                 data[writePos] = (byte)(scratch >> 56);
                 writePos++;
                 data[writePos] = (byte)(scratch >> 48);
