@@ -4,7 +4,7 @@ using System.Text;
 
 namespace BitManipulation
 {
-    public class BitReader
+    public class BitReaderOld
     {
         private byte[] data = new byte[0];
         private int readPos = 0;
@@ -12,7 +12,7 @@ namespace BitManipulation
         private ulong scratch = 0;
         private int scratchIndex = 0;
 
-        public BitReader(byte[] data)
+        public BitReaderOld(byte[] data)
         {
 
         }
