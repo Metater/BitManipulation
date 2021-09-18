@@ -16,8 +16,9 @@ namespace BitManipulation
 
         private readonly int collisionProvision;
 
-        // faster byte[] write
+        // faster byte[] write: Jump to next byte, write all stuff to buffer, then write all bytes
         // manual config of sign, mantissa, and exponent, prob too far
+        // switching data length sizes in arrays with bools or 2,3,4 bit numbers
 
         public BitWriter(int provisionWords = 0, int collisionProvision = 1)
         {

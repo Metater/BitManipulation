@@ -11,7 +11,9 @@ namespace BitManipulation
 
         private int position = 0;
 
-        // faster byte[] read
+        // faster byte[] read: Jump to next byte, read all stuff to buffer, then read all bytes
+        // switching data length sizes in arrays with bools or 2,3,4 bit numbers
+        // Make the data buffer a uint buffer, could improve performance?
 
         public BitReader(byte[] data)
         {
