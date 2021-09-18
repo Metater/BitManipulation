@@ -11,18 +11,18 @@ namespace BitManipulationTesting
     {
         public static void Main(string[] args)
         {
-            int runs = 5;
+            int runs = 50;
 
             List<double> a = new List<double>();
             Stopwatch sa = new Stopwatch();
             for (int j = 0; j < runs; j++)
             {
                 sa.Restart();
-                BitWriter bw = new BitWriter(200000, 1024);
-                for (int i = 0; i < 1000000; i++) bw.Put(4294967295);
+                BitWriter bw = new BitWriter(2000000, 1024);
+                for (int i = 0; i < 1000000; i++) bw.Put(4294967295UL);
                 byte[] da = bw.Assemble();
                 BitReader br = new BitReader(da);
-                for (int i = 0; i < 1000000; i++) br.GetUInt();
+                for (int i = 0; i < 1000000; i++) br.GetULong();
                 sa.Stop();
                 double time = sa.ElapsedTicks / 10000000d;
                 a.Add(time);
