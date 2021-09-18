@@ -1,187 +1,279 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace BitManipulation
 {
     public class BitWriter
     {
-        private byte[] data = new byte[0];
-        private int writePos = 0;
-
-        public ulong scratch = 0;
+        private ulong scratch = 0;
         private int scratchIndex = 0;
 
-        public BitWriter(int provisionBytes)
+        private int wordIndex = 0;
+        private uint[] buffer = new uint[0];
+
+        private readonly int collisionProvision;
+
+        // faster byte[] write
+        // manual config of sign, mantissa, and exponent, prob too far
+
+        public BitWriter(int provisionWords = 0, int collisionProvision = 1)
         {
-            ProvisionBytes(provisionBytes);
+            ProvisionWords(provisionWords);
+            if (collisionProvision < 1) collisionProvision = 1;
+            this.collisionProvision = collisionProvision;
         }
 
-        public void ProvisionBytes(int count)
-        {
-            byte[] newData = new byte[data.Length + count];
-            Buffer.BlockCopy(data, 0, newData, 0, data.Length);
-            data = newData;
-        }
         public void ProvisionWords(int count)
         {
-            ProvisionBytes(count * 4);
+            Array.Resize(ref buffer, buffer.Length + count);
         }
 
-        public void WriteBit(bool value)
+        #region PutMethods
+        public void Put(bool value)
         {
             CheckScratch();
-            scratch >>= 1;
-            if (value) scratch |= (1UL) << 63;
+            if (value) scratch |= 1UL << scratchIndex;
             scratchIndex++;
         }
-        public void WriteByte(byte value, int bits = 8)
+
+        public void Put(byte value, int bits = 8)
         {
             CheckScratch();
-            scratch >>= bits;
-            scratch |= ((ulong)value) << 64 - bits;
+            scratch |= ((ulong)value << 64 - bits) >> (64 - bits) - scratchIndex;
             scratchIndex += bits;
         }
-        public void WriteSByte(sbyte value, int bits = 8)
+        public void Put(sbyte value, int bits = 8)
         {
             CheckScratch();
-            scratch >>= bits;
-            scratch |= ((ulong)value) << 64 - bits;
+            scratch |= ((ulong)value << 64 - bits) >> (64 - bits) - scratchIndex;
             scratchIndex += bits;
         }
-        public void WriteUShort(ushort value, int bits = 16)
+
+        public void Put(char value)
         {
             CheckScratch();
-            scratch >>= bits;
-            scratch |= ((ulong)value) << 64 - bits;
-            scratchIndex += bits;
+            scratch |= ((ulong)value << 64 - 8) >> (64 - 8) - scratchIndex;
+            scratchIndex += 8;
         }
-        public void WriteShort(short value, int bits = 16)
+
+        public void Put(ushort value, int bits = 16)
         {
             CheckScratch();
-            scratch >>= bits;
-            scratch |= ((ulong)value) << 64 - bits;
+            scratch |= ((ulong)value << 64 - bits) >> (64 - bits) - scratchIndex;
             scratchIndex += bits;
         }
-        public void WriteUInt(uint value, int bits = 32)
+        public void Put(short value, int bits = 16)
         {
             CheckScratch();
-            scratch >>= bits;
-            scratch |= ((ulong)value) << 64 - bits;
+            scratch |= ((ulong)value << 64 - bits) >> (64 - bits) - scratchIndex;
             scratchIndex += bits;
         }
-        public void WriteInt(int value, int bits = 32)
+
+        public void Put(uint value, int bits = 32)
         {
             CheckScratch();
-            scratch >>= bits;
-            scratch |= ((ulong)value) << 64 - bits;
+            scratch |= ((ulong)value << 64 - bits) >> (64 - bits) - scratchIndex;
             scratchIndex += bits;
         }
-        public void WriteULong(ulong value, int bits = 64)
+        public void Put(int value, int bits = 32)
         {
-            int value0 = (int)value;
-            int value1 = (int)(value >> 32);
+            CheckScratch();
+            scratch |= ((ulong)value << 64 - bits) >> (64 - bits) - scratchIndex;
+            scratchIndex += bits;
+        }
+
+        public void Put(ulong value, int bits = 64)
+        {
             if (bits <= 32)
-                WriteInt(value0, bits);
-            else
             {
-                WriteInt(value0);
-                WriteInt(value1, bits - 32);
+                Put((uint)value, bits);
+                return;
             }
+            Put((uint)value);
+            Put((uint)(value >> 32), bits - 32);
         }
-        public void WriteLong(long value, int bits = 64)
+        public void Put(long value, int bits = 64)
         {
-            int value0 = (int)value;
-            int value1 = (int)(value >> 32);
             if (bits <= 32)
-                WriteInt(value0, bits);
-            else
             {
-                WriteInt(value0);
-                WriteInt(value1, bits - 32);
+                Put((uint)value, bits);
+                return;
             }
+            Put((uint)value);
+            Put((uint)(value >> 32), bits - 32);
         }
+
+        public void Put(float value)
+        {
+            ConverterHelperFloat ch = new ConverterHelperFloat { i = value };
+            Put(ch.o);
+        }
+        public void Put(double value)
+        {
+            ConverterHelperDouble ch = new ConverterHelperDouble { i = value };
+            Put(ch.o);
+        }
+
+        public void Put(string value, int lengthBits)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                Put(0, lengthBits);
+                return;
+            }
+
+            byte[] values = Encoding.UTF8.GetBytes(value);
+            Put(values.Length, lengthBits);
+
+            for (int i = 0; i < values.Length; i++)
+                Put(values[i]);
+        }
+        #endregion PutMethods
+
+        #region PutArrayMethods
+        public void PutArray(bool[] value, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i]);
+        }
+
+        public void PutArray(byte[] value, int valueBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueBits);
+        }
+        public void PutArray(sbyte[] value, int valueBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueBits);
+        }
+
+        public void PutArray(char[] value, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i]);
+        }
+
+        public void PutArray(ushort[] value, int valueBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueBits);
+        }
+        public void PutArray(short[] value, int valueBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueBits);
+        }
+
+        public void PutArray(uint[] value, int valueBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueBits);
+        }
+        public void PutArray(int[] value, int valueBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueBits);
+        }
+
+        public void PutArray(ulong[] value, int valueBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueBits);
+        }
+        public void PutArray(long[] value, int valueBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueBits);
+        }
+
+        public void PutArray(float[] value, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i]);
+        }
+        public void PutArray(double[] value, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i]);
+        }
+
+        public void PutArray(string[] value, int valueLengthBits, int lengthBits)
+        {
+            Put(value.Length, lengthBits);
+            for (int i = 0; i < value.Length || i < (1 << lengthBits); i++)
+                Put(value[i], valueLengthBits);
+        }
+        #endregion PutArrayMethods
 
         public byte[] Assemble()
         {
-            // Flipped wrong way, each byte is
-            CheckScratch();
-            int bitsInScratch = scratchIndex;
-            if (bitsInScratch == 0) return TrimData();
-            if (bitsInScratch <= 8)
-            { // 1 byte
-                scratch = (scratch >> (8 - bitsInScratch));
-                data[writePos] = (byte)(scratch >> 56);
-                writePos++;
-            }
-            else if (bitsInScratch <= 16)
-            { // 2 bytes
-                scratch = (scratch >> (8 - bitsInScratch));
-                data[writePos] = (byte)(scratch >> 56);
-                writePos++;
-                data[writePos] = (byte)(scratch >> 48);
-                writePos++;
-            }
-            else if (bitsInScratch <= 24)
-            { // 3 bytes
-                scratch = (scratch >> (8 - bitsInScratch));
-                data[writePos] = (byte)(scratch >> 56);
-                writePos++;
-                data[writePos] = (byte)(scratch >> 48);
-                writePos++;
-                data[writePos] = (byte)(scratch >> 40);
-                writePos++;
-            }
-            else
-            { // 4 bytes
-                scratch = (scratch >> (8 - bitsInScratch));
-                data[writePos] = (byte)(scratch >> 56);
-                writePos++;
-                data[writePos] = (byte)(scratch >> 48);
-                writePos++;
-                data[writePos] = (byte)(scratch >> 40);
-                writePos++;
-                data[writePos] = (byte)(scratch >> 32);
-                writePos++;
-            }
-            return TrimData();
-        }
-        private byte[] TrimData()
-        {
-            byte[] trimmedData = new byte[writePos];
-            Buffer.BlockCopy(data, 0, trimmedData, 0, writePos);
-            return trimmedData;
-        }
-        public void CheckScratch()
-        {
-            if (scratchIndex >= 32)
-            {
-                uint dump = (uint)(scratch >> scratchIndex);
-                FastBitConverter.GetBytes(data, writePos, dump);
-                scratch = (scratch >> 32);
-                writePos += 4;
-                scratchIndex -= 32;
-            }
+            CheckScratch(true);
+            int trim = 0;
+            int maxBufferIndex = wordIndex - 1;
+            uint last = buffer[maxBufferIndex];
+            if (last < 1 << 8) trim = 3;
+            else if (last < 1 << 16) trim = 2;
+            else if (last < 1 << 24) trim = 1;
+            byte[] data = new byte[(wordIndex * 4) - trim];
+            for (int i = 0; i < maxBufferIndex; i++)
+                WriteLittleEndian(data, i * 4, buffer[i]);
+            for (int i = 0; i < 4 - trim; i++)
+                data[(maxBufferIndex * 4) + i] = (byte)(buffer[maxBufferIndex] >> (i * 8));
+            return data;
         }
 
-        public static void PrintBits(byte[] bytes)
+        private void CheckScratch(bool force = false)
         {
-            string print = "";
+            if (!force) if (scratchIndex < 32) return;
+            if (buffer.Length < wordIndex + 1) ProvisionWords(collisionProvision);
+            buffer[wordIndex] = (uint)scratch;
+            scratch >>= 32;
+            scratchIndex -= 32;
+            wordIndex++;
+        }
 
-            int bitPos = 0;
-            while (bitPos < 8 * bytes.Length)
-            {
-                int byteIndex = bitPos / 8;
-                int offset = bitPos % 8;
-                bool isSet = (bytes[byteIndex] & (1 << offset)) != 0;
-                if (offset == 0) print = " " + print + "\n";
-                if (isSet)
-                    print = "1" + print;
-                else
-                    print = "0" + print;
-                bitPos++;
-            }
-            Console.WriteLine(print);
+        private static void WriteLittleEndian(byte[] buffer, int offset, uint data)
+        {
+            buffer[offset] = (byte)(data);
+            buffer[offset + 1] = (byte)(data >> 8);
+            buffer[offset + 2] = (byte)(data >> 16);
+            buffer[offset + 3] = (byte)(data >> 24);
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        public struct ConverterHelperDouble
+        {
+            [FieldOffset(0)]
+            public ulong o;
+
+            [FieldOffset(0)]
+            public double i;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        public struct ConverterHelperFloat
+        {
+            [FieldOffset(0)]
+            public int o;
+
+            [FieldOffset(0)]
+            public float i;
         }
     }
 }
