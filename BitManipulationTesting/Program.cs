@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using BitManipulation;
+using LiteNetLib.Utils;
 
 namespace BitManipulationTesting
 {
@@ -9,14 +11,43 @@ namespace BitManipulationTesting
     {
         public static void Main(string[] args)
         {
-            BitWriter bw = new BitWriter(2, 2);
-            bw.Put(0xff, 7);
-            bw.Put(0x55, 8);
-            byte[] data = bw.Assemble();
-            PrintBits(data);
-            BitReader br = new BitReader(data);
-            for (int i = 0; i < 7; i++) br.GetBool();
-            Console.WriteLine(br.GetByte());
+            int runs = 5;
+
+            List<double> a = new List<double>();
+            Stopwatch sa = new Stopwatch();
+            for (int j = 0; j < runs; j++)
+            {
+                sa.Restart();
+                BitWriter bw = new BitWriter(200000, 1024);
+                for (int i = 0; i < 1000000; i++) bw.Put(4294967295);
+                byte[] da = bw.Assemble();
+                BitReader br = new BitReader(da);
+                for (int i = 0; i < 1000000; i++) br.GetUInt();
+                sa.Stop();
+                double time = sa.ElapsedTicks / 10000000d;
+                a.Add(time);
+            }
+            double sua = 0;
+            foreach (double t in a) sua += t;
+            Console.WriteLine($"BitManipulator avg time: {sua / runs}ms");
+
+            List<double> b = new List<double>();
+            Stopwatch sb = new Stopwatch();
+            for (int j = 0; j < runs; j++)
+            {
+                sb.Restart();
+                NetDataWriter ndw = new NetDataWriter();
+                for (int i = 0; i < 1000000; i++) ndw.Put(4294967295);
+                byte[] db = ndw.CopyData();
+                NetDataReader ndr = new NetDataReader(db);
+                for (int i = 0; i < 1000000; i++) ndr.GetUInt();
+                sb.Stop();
+                double time = sa.ElapsedTicks / 10000000d;
+                b.Add(time);
+            }
+            double sub = 0;
+            foreach (double t in b) sub += t;
+            Console.WriteLine($"LiteNetLib avg time: {sub / runs}ms");
         }
 
         public static void PrintByteArray(byte[] data)
