@@ -11,7 +11,7 @@ namespace BitManipulationTesting
     {
         public static void Main(string[] args)
         {
-            int runs = 50;
+            int runs = 100;
 
             List<double> a = new List<double>();
             Stopwatch sa = new Stopwatch();
@@ -19,10 +19,10 @@ namespace BitManipulationTesting
             {
                 sa.Restart();
                 BitWriter bw = new BitWriter(2000000, 1024);
-                for (int i = 0; i < 1000000; i++) bw.Put(4294967295UL);
+                for (int i = 0; i < 10; i++) bw.Put(18446744073709551615UL);
                 byte[] da = bw.Assemble();
                 BitReader br = new BitReader(da);
-                for (int i = 0; i < 1000000; i++) br.GetULong();
+                for (int i = 0; i < 10; i++) br.GetULong();
                 sa.Stop();
                 double time = sa.ElapsedTicks / 10000000d;
                 a.Add(time);
@@ -37,10 +37,10 @@ namespace BitManipulationTesting
             {
                 sb.Restart();
                 NetDataWriter ndw = new NetDataWriter();
-                for (int i = 0; i < 1000000; i++) ndw.Put(4294967295);
+                for (int i = 0; i < 10; i++) ndw.Put(18446744073709551615UL);
                 byte[] db = ndw.CopyData();
                 NetDataReader ndr = new NetDataReader(db);
-                for (int i = 0; i < 1000000; i++) ndr.GetUInt();
+                for (int i = 0; i < 10; i++) ndr.GetULong();
                 sb.Stop();
                 double time = sa.ElapsedTicks / 10000000d;
                 b.Add(time);
