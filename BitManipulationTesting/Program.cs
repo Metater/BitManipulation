@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using BitManipulation;
-using LiteNetLib.Utils;
 
 namespace BitManipulationTesting
 {
@@ -11,43 +10,9 @@ namespace BitManipulationTesting
     {
         public static void Main(string[] args)
         {
-            int runs = 100;
-
-            List<double> a = new List<double>();
-            Stopwatch sa = new Stopwatch();
-            for (int j = 0; j < runs; j++)
-            {
-                sa.Restart();
-                BitWriter bw = new BitWriter(2000000, 1024);
-                for (int i = 0; i < 10; i++) bw.Put(18446744073709551615UL);
-                byte[] da = bw.Assemble();
-                BitReader br = new BitReader(da);
-                for (int i = 0; i < 10; i++) br.GetULong();
-                sa.Stop();
-                double time = sa.ElapsedTicks / 10000000d;
-                a.Add(time);
-            }
-            double sua = 0;
-            foreach (double t in a) sua += t;
-            Console.WriteLine($"BitManipulator avg time: {sua / runs}ms");
-
-            List<double> b = new List<double>();
-            Stopwatch sb = new Stopwatch();
-            for (int j = 0; j < runs; j++)
-            {
-                sb.Restart();
-                NetDataWriter ndw = new NetDataWriter();
-                for (int i = 0; i < 10; i++) ndw.Put(18446744073709551615UL);
-                byte[] db = ndw.CopyData();
-                NetDataReader ndr = new NetDataReader(db);
-                for (int i = 0; i < 10; i++) ndr.GetULong();
-                sb.Stop();
-                double time = sa.ElapsedTicks / 10000000d;
-                b.Add(time);
-            }
-            double sub = 0;
-            foreach (double t in b) sub += t;
-            Console.WriteLine($"LiteNetLib avg time: {sub / runs}ms");
+            BitWriter bw = new BitWriter();
+            bw.Put((byte)0xff);
+            PrintBits(bw.Assemble());
         }
 
         public static void PrintByteArray(byte[] data)

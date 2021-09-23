@@ -4,4 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>E:\Projects\Unity\Turris\Assets\BitManipulation\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="FastBitConverter.cs" />
+    <Compile Remove="NetDataReader.cs" />
+    <Compile Remove="NetDataWriter.cs" />
+  </ItemGroup>
+
 </Project>

@@ -226,7 +226,7 @@ namespace BitManipulation
         {
             CheckScratch(true);
             int trim = 0;
-            while (buffer[wordIndex - 1] == 0) wordIndex--;
+            while (buffer[wordIndex - 1] == 0 && wordIndex > 1) wordIndex--;
             int maxBufferIndex = wordIndex - 1;
             uint last = buffer[maxBufferIndex];
             if (last < 1 << 8) trim = 3;
