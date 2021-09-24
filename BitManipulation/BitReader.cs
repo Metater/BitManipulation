@@ -41,7 +41,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= (byte)(GetNextByte() << bits - remainingBits);
+                value |= (byte)((((uint)GetNextByte() << 32 - remainingBits) >> 32 - remainingBits) << bits - remainingBits);
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -55,7 +55,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= (sbyte)(GetNextByte() << bits - remainingBits);
+                value |= (sbyte)((((uint)GetNextByte() << 32 - remainingBits) >> 32 - remainingBits) << bits - remainingBits);
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -70,7 +70,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= (char)(GetNextByte() << 8 - remainingBits);
+                value |= (char)((((uint)GetNextByte() << 32 - remainingBits) >> 32 - remainingBits) << 8 - remainingBits);
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -85,7 +85,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= (ushort)(GetNextByte() << bits - remainingBits);
+                value |= (ushort)((((uint)GetNextByte() << 32 - remainingBits) >> 32 - remainingBits) << bits - remainingBits);
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -99,7 +99,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= (short)(GetNextByte() << bits - remainingBits);
+                value |= (short)((((uint)GetNextByte() << 32 - remainingBits) >> 32 - remainingBits) << bits - remainingBits);
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -114,7 +114,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= (uint)(GetNextByte() << bits - remainingBits);
+                value |= (((uint)GetNextByte() << 32 - remainingBits) >> 32 - remainingBits) << bits - remainingBits;
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -128,7 +128,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= GetNextByte() << bits - remainingBits;
+                value |= (int)((((uint)GetNextByte() << 32 - remainingBits) >> 32 - remainingBits) << bits - remainingBits);
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -143,7 +143,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= ((ulong)GetNextByte()) << bits - remainingBits;
+                value |= (((ulong)GetNextByte() << 64 - remainingBits) >> 64 - remainingBits) << bits - remainingBits;
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -157,7 +157,7 @@ namespace BitManipulation
             {
                 int bitsRead = 8 - GetRemainder();
                 if (bitsRead > remainingBits) bitsRead = remainingBits;
-                value |= ((long)GetNextByte()) << bits - remainingBits;
+                value |= (long)((((ulong)GetNextByte() << 64 - remainingBits) >> 64 - remainingBits) << bits - remainingBits);
                 remainingBits -= bitsRead;
                 position += bitsRead;
             }
@@ -308,6 +308,10 @@ namespace BitManipulation
         {
             if (data.Length <= GetIndex()) return 0x00;
             return (byte)(data[GetIndex()] >> GetRemainder());
+        }
+        private int GetNextInt(int bits, int remainingBits)
+        {
+            return GetNextByte() << bits - remainingBits;
         }
     }
 }
