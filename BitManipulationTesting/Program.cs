@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using BitManipulation;
+using LiteNetLib.Utils;
 
 namespace BitManipulationTesting
 {
@@ -10,7 +11,32 @@ namespace BitManipulationTesting
     {
         public static void Main(string[] args)
         {
+            BitReader reader = new BitReader();
+            byte[] test = new byte[8000000];
+            reader.SetSource(test);
 
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < 8000; i++)
+            {
+                reader.GetBool();
+            }
+            sw.Stop();
+            Console.WriteLine(sw.ElapsedTicks / 10000d);
+
+            sw.Reset();
+
+            NetDataReader reader2 = new NetDataReader();
+            reader2.SetSource(test);
+            sw.Start();
+            for (int i = 0; i < 8000; i++)
+            {
+                reader2.GetBool();
+            }
+            sw.Stop();
+            Console.WriteLine(sw.ElapsedTicks / 10000d);
+
+            /*
             BitWriter bw = new BitWriter();
             bw.Put((int)((4.5f * 256f) + 8192), 14);
             bw.Put((int)((3.5f * 256f)), 10);
@@ -42,6 +68,7 @@ namespace BitManipulationTesting
             Console.WriteLine(zPos);
             Console.WriteLine(rot);
             Console.WriteLine(pitch);
+            */
         }
 
         public static void PrintByteArray(byte[] data)

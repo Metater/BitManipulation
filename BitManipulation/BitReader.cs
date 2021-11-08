@@ -15,8 +15,16 @@ namespace BitManipulation
         // switching data length sizes in arrays with bools or 2,3,4 bit numbers
         // Make the data buffer a uint buffer, could improve performance?
 
+        public BitReader() {}
+
         public BitReader(byte[] data)
         {
+            this.data = data;
+        }
+
+        public void SetSource(byte[] data)
+        {
+            position = 0;
             this.data = data;
         }
 
@@ -296,10 +304,12 @@ namespace BitManipulation
         }
         #endregion ArrayGetMethods
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetIndex()
         {
             return position / 8;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetRemainder()
         {
             return position % 8;
@@ -308,10 +318,6 @@ namespace BitManipulation
         {
             if (data.Length <= GetIndex()) return 0x00;
             return (byte)(data[GetIndex()] >> GetRemainder());
-        }
-        private int GetNextInt(int bits, int remainingBits)
-        {
-            return GetNextByte() << bits - remainingBits;
         }
     }
 }
