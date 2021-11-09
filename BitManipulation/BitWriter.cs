@@ -20,11 +20,20 @@ namespace BitManipulation
         // manual config of sign, mantissa, and exponent, prob too far
         // switching data length sizes in arrays with bools or 2,3,4 bit numbers
 
-        public BitWriter(int provisionWords = 0, int collisionProvision = 1)
+        public BitWriter(int provisionWords = 64, int collisionProvision = 64)
         {
-            ProvisionWords(provisionWords);
             if (collisionProvision < 1) collisionProvision = 1;
+            if (provisionWords < 1) provisionWords = 1;
+            ProvisionWords(provisionWords);
             this.collisionProvision = collisionProvision;
+        }
+
+        public void Reset()
+        {
+            scratch = 0;
+            scratchIndex = 0;
+            wordIndex = 0;
+            for (int i = 0; i < buffer.Length; i++) buffer[i] = 0;
         }
 
         public void ProvisionWords(int count)
