@@ -16,6 +16,19 @@ namespace BitManipulation
 
         private readonly int collisionProvision;
 
+        public int BytesWritten
+        {
+            get
+            {
+                int scratchBytes;
+                if (scratchIndex < 8) scratchBytes = 1;
+                else if (scratchIndex < 16) scratchBytes = 2;
+                else if (scratchIndex < 24) scratchBytes = 3;
+                else scratchBytes = 4;
+                return (wordIndex * 4) + scratchBytes;
+            }
+        }
+
         // faster byte[] write: Jump to next byte, write all stuff to buffer, then write all bytes
         // manual config of sign, mantissa, and exponent, prob too far
         // switching data length sizes in arrays with bools or 2,3,4 bit numbers
@@ -249,9 +262,25 @@ namespace BitManipulation
             return data;
         }
 
+        public void Assemble(byte[] buf)
+        {
+            CheckScratch(true);
+            int trim = 0;
+            while (buffer[wordIndex - 1] == 0 && wordIndex > 1) wordIndex--;
+            int maxBufferIndex = wordIndex - 1;
+            uint last = buffer[maxBufferIndex];
+            if (last < 1 << 8) trim = 3;
+            else if (last < 1 << 16) trim = 2;
+            else if (last < 1 << 24) trim = 1;
+            for (int i = 0; i < maxBufferIndex; i++)
+                WriteLittleEndian(buf, i * 4, buffer[i]);
+            for (int i = 0; i < 4 - trim; i++)
+                buf[(maxBufferIndex * 4) + i] = (byte)(buffer[maxBufferIndex] >> (i * 8));
+        }
+
         private void CheckScratch(bool force = false)
         {
-            if (!force) if (scratchIndex < 32) return;
+            if (!force && scratchIndex < 32) return;
             if (buffer.Length < wordIndex + 1) ProvisionWords(collisionProvision);
             buffer[wordIndex] = (uint)scratch;
             scratch >>= 32;
